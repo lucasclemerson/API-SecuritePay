@@ -1,2 +1,8 @@
 .env
+.env.local
 API/logs/auth.log
+API/logs/*.log
+node_modules/
+vendor/
+*.log
+.DS_Store
