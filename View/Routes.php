@@ -44,13 +44,15 @@ class Routes
 
     public function dispatch()
     {
-        foreach ($this->routes as $route) {
+        foreach ($this->routes as $key => $route) {
             if ($route['method'] === $this->method && $this->matchUri($route['path'])) {
                 return $this->executeRoute($route);
             }
         }
+
         http_response_code(404);
-        echo json_encode(['error' => 'Routes: rule not found']);
+        echo json_encode(['error' => 'Routes: rule not found', 'path' => $this->uri]);
+        exit;
     }
 
     private function matchUri($pattern)
@@ -61,8 +63,9 @@ class Routes
 
     private function executeRoute($route)
     {
-        $modelPath = __DIR__ .'\\Model\\'.$route['model'].'.php';
-        $modelPath = str_replace('\\View', '', $modelPath);
+        //$modelPath = __DIR__ .'\\..\\Model\\'.$route['model'].'.php';
+        //$modelPath = str_replace('View\\', '', $modelPath);
+        $modelPath = dirname(__DIR__) . '/Model/' . $route['model'] . '.php';
         $modelClass = $route['model'];
         $action = $route['action'];
 

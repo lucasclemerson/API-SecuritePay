@@ -1,0 +1,11 @@
+[2026-02-20 09:24:27] LOGIN | Usuário: local | Status: Sucesso | IP: ::1
+[2026-02-20 09:45:33] VALIDATE TOKEN | Usuário: {{TOKEN}} | Status: Falha | IP: ::1
+[2026-02-20 09:45:36] VALIDATE TOKEN | Usuário: {{TOKEN}} | Status: Falha | IP: ::1
+[2026-02-20 09:46:01] VALIDATE TOKEN | Usuário: {{TOKEN}} | Status: Falha | IP: ::1
+[2026-02-20 09:46:29] VALIDATE TOKEN | Usuário: AMBIENTE DE DESENVOLVIMENTO | Status: Sucesso | IP: ::1
+[2026-02-20 09:47:41] LOGOUT | Usuário: 3097406431db40c94056896dafe886739b142785d727b6e029e9fa0aceffcf17 | Status: Sucesso | IP: ::1
+[2026-02-20 09:47:50] LOGOUT | Usuário: 3097406431db40c94056896dafe886739b142785d727b6e029e9fa0aceffcf17 | Status: Sucesso | IP: ::1
+[2026-02-20 09:47:54] VALIDATE TOKEN | Usuário: 3097406431db40c94056896dafe886739b142785d727b6e029e9fa0aceffcf17 | Status: Falha | IP: ::1
+[2026-02-20 09:49:46] LOGIN | Usuário: local | Status: Sucesso | IP: ::1
+[2026-02-20 09:52:25] LOGIN | Usuário: homologacao | Status: Sucesso | IP: ::1
+[2026-02-20 09:52:44] LOGIN | Usuário: homologacao | Status: Sucesso | IP: ::1

@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Define a pasta base (raiz do projeto)
+RewriteBase /
+
+# Se não for arquivo real
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Se não for diretório real
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Redireciona tudo para View/index.php
+RewriteRule ^(.*)$ View/index.php [L,QSA]
