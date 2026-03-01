@@ -1,4 +1,16 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header('Content-Type: application/json');
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 date_default_timezone_set('America/Sao_Paulo');
 setlocale(LC_ALL, 'pt_BR.UTF-8');
@@ -16,19 +28,21 @@ class Index {
     private $auth_api; 
     private $auth;
     private $path_default;
-    private $envPath = '.env';
+    private $envPath;
 
     public function __construct() {
+
+        $headers = getallheaders();
         $this->routes = new \Routes();
         $this->auth_api = new \Auth();  
         $this->method = $_SERVER['REQUEST_METHOD'];
         $this->path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $this->auth = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $this->auth = $headers['Authorization'] ?? null;
+        $this->envPath = '.env';
 
 
         $this->loadEnv();
-        $this->path_default = getenv('PATH_DEFAULT')?:null;
-
+        $this->path_default = getenv('PATH_DEFAULT')?:"/caminho-padrao/api";
 
         switch ($this->method) {
             case 'GET':
@@ -41,14 +55,17 @@ class Index {
                 http_response_code(405);
                 echo json_encode(['error' => 'Method not allowed']);
                 break;
-        }
+        } 
     }
 
     public function loadEnv() {
-        $filePath = __DIR__.'/../'.$this->envPath;
+        $filePath = __DIR__."/../".$this->envPath;
         if (!file_exists($filePath)) {
-            throw new Exception("Index: File .env not found: $filePath");
+            http_response_code(500);
+            echo json_encode(['error' => '.env not found']);
+            exit;
         }
+
         $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
             if (strpos($line, '=') !== false && strpos($line, '#') !== 0) {
@@ -60,15 +77,16 @@ class Index {
 
     // GET Routes
     function handleGetRequest($path) {
-        
+    
         // ROTAS DEFAULT
-        if (strpos($path, $this->path_default.'/health')!==false){
+        if (strpos($path, $this->path_default.'/health') !== false){
             http_response_code(200);   
             echo json_encode([
                 'status' => 'OK', 
                 'php_version' => $_SERVER['SERVER_SOFTWARE'],
                 'project_version'=> '1.0.0', 
                 "time_consult" => date('Y-m-d H:i:s'),
+                'DIR'=> __DIR__,
                 'developer_info' => [
                     'name' => 'Clemerson L Oliveira',
                     'email' => 'clemerson.lucas.oliveira@gmail.com'
@@ -92,29 +110,31 @@ class Index {
                     if (strpos($path, $this->path_default.'/web/machines') !== false){
                         $this->routes->get($this->path_default.'/web/machines', 'ModelMachine', 'getAll');
                         $response = $this->routes->dispatch();    
-                        echo json_encode(['status' => 'OK', 'Total Machines' => count($response),  'data' => $response, 'path' => $path]);
+                        echo json_encode(['status' => 'OK', 'Total Machines' => count($response),  'result' => $response, 'path' => $path, 'path_default' => $this->path_default]);
+                        exit;
                     }
 
                      // CARD FLAGS
                     if (strpos($path, $this->path_default.'/web/card-flags') !== false){
-                        $this->routes->get($this->path_default.'web/card-flags', 'ModelCardFlags', 'getAll');
+                        $this->routes->get($this->path_default.'/web/card-flags', 'ModelCardFlags', 'getAll');
                         $response = $this->routes->dispatch();    
-                        echo json_encode(['status' => 'OK', 'Total Card Flags' => count($response),  'data' => $response, 'path' => $path]);
+                        echo json_encode(['status' => 'OK', 'Total Card Flags' => count($response),  'result' => $response, 'path' => $path, 'path_default' => $this->path_default]);
+                        exit;
                     }
 
                 } else {
                     http_response_code(401);
-                    echo json_encode(['error' => 'Index: Invalid or expired token', 'path' => $path]);
+                    echo json_encode(['error' => 'Index: Invalid or expired token', 'path' => $path, 'path_default' => $this->path_default]);
                     exit;
                 }
             } else {
                 http_response_code(401);
-                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path]);
+                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path, 'path_default' => $this->path_default]);
                 exit;
             }
-
+            
             http_response_code(401);
-            echo json_encode(['error' => 'Index: The requested route requires authentication', 'path' => $path]);
+            echo json_encode(['error' => 'Index: The requested route requires authentication', 'path' => $path, 'path_default' => $this->path_default]);
             exit;
         }
                 
@@ -134,15 +154,15 @@ class Index {
                 $response = $this->auth_api->login($username, $password);
                 if ($response){
                     http_response_code(200);
-                    echo json_encode(['status' => 'OK', 'message' => 'Index: Login successful', 'result' => $response, 'path' => $path]);
+                    echo json_encode(['status' => 'OK', 'message' => 'Index: Login successful', 'result' => $response, 'path' => $path, 'path_default' => $this->path_default]);
                 } else {
                     http_response_code(401);
-                    echo json_encode(['error' => 'Index: Login not authorized', 'path' => $path]);
+                    echo json_encode(['error' => 'Index: Login not authorized', 'path' => $path, 'path_default' => $this->path_default]);
                 }
             } 
             else {
                 http_response_code(401);
-                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path]);
+                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path, 'path_default' => $this->path_default]);
             }
         } 
 
@@ -153,14 +173,14 @@ class Index {
                 $response = $this->auth_api->logout($token);
                 if ($response) {
                     http_response_code(200);
-                    echo json_encode(['status' => 'OK', 'message' => 'Index: Logout successful', 'path' => $path]);
+                    echo json_encode(['status' => 'OK', 'message' => 'Index: Logout successful', 'path' => $path, 'path_default' => $this->path_default]);
                 } else {
                     http_response_code(401);
-                    echo json_encode(['error' => 'Index: Logout not authorized', 'path' => $path]);
+                    echo json_encode(['error' => 'Index: Logout not authorized', 'path' => $path, 'path_default' => $this->path_default]);
                 }
             } else {
                 http_response_code(401);
-                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path]);
+                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path, 'path_default' => $this->path_default]);
             }
         }
 
@@ -173,19 +193,19 @@ class Index {
                 $response = $this->auth_api->validateToken($token);
                 if ($response) {
                     http_response_code(200);
-                    echo json_encode(['status' => 'OK', 'message' => 'Index: Token is valid', 'result' => $response, 'path' => $path]);
+                    echo json_encode(['status' => 'OK', 'message' => 'Index: Token is valid', 'result' => $response, 'path' => $path, 'path_default' => $this->path_default]);
                 } else {
                     http_response_code(401);
-                    echo json_encode(['error' => 'Index: Invalid or expired token', 'path' => $path]);
+                    echo json_encode(['error' => 'Index: Invalid or expired token', 'path' => $path, 'path_default' => $this->path_default]);
                 }
             } else {
                 http_response_code(401);
-                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path]);
+                echo json_encode(['error' => 'Index: Missing or invalid authorization', 'path' => $path, 'path_default' => $this->path_default]);
             }
         }            
         else {
             http_response_code(404);
-            echo json_encode(['error' => 'Index: Route not found', 'path' => $path]);
+            echo json_encode(['error' => 'Index: Route not found', 'path' => $path, 'path_default' => $this->path_default]);
         }
         
     }
